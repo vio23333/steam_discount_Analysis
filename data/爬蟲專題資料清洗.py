@@ -141,6 +141,28 @@ df["Quarters_Since_Release"] = df["Release_Absolute_Quarter"].apply(
     lambda x: current_absolute_q - x if x is not None else None
 )
 # ===============================
+# 距今幾天
+# ===============================
+
+def parse_to_date(date_str):
+    if pd.isna(date_str):
+        return None
+    
+    year_match = re.search(r"(\d{4})", str(date_str))
+    month_match = re.search(r"(\d{1,2})\s*月", str(date_str))
+    
+    if year_match and month_match:
+        # 回傳該月 1 號的日期格式
+        return pd.Timestamp(year=int(year_match.group(1)), 
+                            month=int(month_match.group(1)), 
+                            day=1)
+    return None
+
+df["_temp_date"] = df["Release_Date"].apply(parse_to_date)
+today = pd.Timestamp(datetime.now().date())
+df["Days_Since_Release"] = (today - df["_temp_date"]).dt.days
+
+# ===============================
 # 評價等級（中文）→ 數字
 # ===============================
 review_map = {
@@ -176,6 +198,7 @@ desired_order = [
     "Years_Since_Release",
     "Quarters_Since_Release",         
     "Review_Score",
+    "Days_Since_Release",
 ]
 
 column_zh_map = {
@@ -189,6 +212,7 @@ column_zh_map = {
     "Years_Since_Release": "上市年數",
     "Quarters_Since_Release": "上市季度數",
     "Review_Score": "評價分數",
+    "Days_Since_Release": "上市天數"
 }
 
 # 希望的順序排序欄位
